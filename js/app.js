@@ -3,7 +3,7 @@
    - Stickers NOT stored locally
    - Files -> Supabase Storage (Bucket: "Sticker-Vault")
    - Metadata -> Supabase Table   (Table:  "Sticker-Vault")
-   - localStorage ONLY for theme + remember login
+   - localStorage ONLY for theme + remember login + BACKGROUND PREFS
    - Cookie used for legal disclaimer consent
 ========================================================= */
 
@@ -34,15 +34,189 @@ const AUTH_PERSIST_KEY = "stickerVault.auth.persist";
 const LEGAL_COOKIE_NAME = "sv_legal_accepted";
 const LEGAL_COOKIE_DAYS = 365;
 
+/* NEW: background preferences */
+const BG_PREF_KEY = "sv_bg_prefs.v1";
+
 /* ================= STATE ================= */
 
 let activeCategory = "none";  // must pick category for upload
 let isAuthed = false;
 let isLegalAccepted = false;
 
+/* ================= BACKGROUND PRESETS =================
+   Wir verwenden CSS-Grads + kleine SVG-Patterns als data-URI,
+   damit du keine extra Bilddateien hosten musst.
+======================================================= */
+
+function svgDataUri(svg) {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const SVG_WEB = svgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+  <rect width="260" height="260" fill="transparent"/>
+  <g stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none">
+    <circle cx="30" cy="30" r="90"/>
+    <circle cx="30" cy="30" r="60"/>
+    <circle cx="30" cy="30" r="30"/>
+    <path d="M30 30 L130 30"/>
+    <path d="M30 30 L30 130"/>
+    <path d="M30 30 L100 100"/>
+    <path d="M30 30 L130 60"/>
+    <path d="M30 30 L60 130"/>
+  </g>
+  <g fill="rgba(255,255,255,0.08)">
+    <path d="M215 215c-10-14-24-22-40-22-19 0-35 11-45 28 7 4 16 7 26 7 11 0 21-3 29-9 6 6 16 10 30 10z"/>
+    <circle cx="175" cy="208" r="3"/>
+    <circle cx="189" cy="208" r="3"/>
+  </g>
+</svg>
+`);
+
+const SVG_LEAVES = svgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+  <rect width="260" height="260" fill="transparent"/>
+  <g fill="rgba(120,255,160,0.10)">
+    <path d="M60 190c30-60 80-90 140-100-15 55-60 105-140 100z"/>
+    <path d="M70 200c45-35 90-45 150-40-25 35-80 60-150 40z"/>
+    <path d="M160 70c25 10 45 30 55 55-40 0-75-20-55-55z"/>
+  </g>
+  <g stroke="rgba(255,255,255,0.08)" stroke-width="1" fill="none">
+    <path d="M70 200c40-50 80-85 130-110"/>
+    <path d="M160 70c5 25 0 45-20 65"/>
+  </g>
+  <g fill="rgba(255,255,255,0.08)">
+    <path d="M210 210c-10-14-24-22-40-22-19 0-35 11-45 28 7 4 16 7 26 7 11 0 21-3 29-9 6 6 16 10 30 10z"/>
+    <circle cx="170" cy="203" r="3"/>
+    <circle cx="184" cy="203" r="3"/>
+  </g>
+</svg>
+`);
+
+const SVG_METAL = svgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+  <rect width="260" height="260" fill="transparent"/>
+  <g stroke="rgba(255,255,255,0.10)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M10 60 L80 40 L130 70 L170 30 L250 60"/>
+    <path d="M0 140 L70 120 L120 160 L170 110 L260 140"/>
+    <path d="M10 220 L90 200 L140 240 L200 190 L250 220"/>
+  </g>
+  <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+    <path d="M0 20 L260 20"/>
+    <path d="M0 100 L260 100"/>
+    <path d="M0 180 L260 180"/>
+  </g>
+</svg>
+`);
+
+const SVG_ANIME = svgDataUri(`
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,80,160,0.22)"/>
+      <stop offset="0.5" stop-color="rgba(124,92,255,0.20)"/>
+      <stop offset="1" stop-color="rgba(55,210,177,0.18)"/>
+    </linearGradient>
+  </defs>
+  <rect width="260" height="260" fill="url(#g)"/>
+  <g fill="rgba(255,255,255,0.10)">
+    <circle cx="60" cy="70" r="22"/>
+    <circle cx="120" cy="130" r="26"/>
+    <circle cx="200" cy="90" r="18"/>
+    <circle cx="190" cy="190" r="28"/>
+    <circle cx="70" cy="200" r="18"/>
+  </g>
+  <g stroke="rgba(0,0,0,0.18)" stroke-width="1">
+    <path d="M20 30 L240 30"/>
+    <path d="M20 230 L240 230"/>
+  </g>
+</svg>
+`);
+
+const BG_PRESETS = {
+  witch: {
+    app: `radial-gradient(1200px 800px at 25% -10%, rgba(124,92,255,.20), transparent 55%),
+          radial-gradient(900px 600px at 85% 15%, rgba(0,0,0,.55), transparent 55%),
+          url("${SVG_WEB}"),
+          #0b0d12`,
+    panel: `linear-gradient(180deg, rgba(0,0,0,.34), rgba(0,0,0,.18)),
+            url("${SVG_WEB}")`,
+    topbar: `linear-gradient(180deg, rgba(0,0,0,.32), rgba(0,0,0,.16)),
+             url("${SVG_WEB}")`
+  },
+  cozy: {
+    app: `radial-gradient(1100px 750px at 25% -10%, rgba(30,120,90,.22), transparent 55%),
+          radial-gradient(900px 600px at 85% 10%, rgba(0,0,0,.40), transparent 55%),
+          url("${SVG_LEAVES}"),
+          #0b1411`,
+    panel: `linear-gradient(180deg, rgba(20,40,28,.28), rgba(0,0,0,.12)),
+            url("${SVG_LEAVES}")`,
+    topbar: `linear-gradient(180deg, rgba(20,40,28,.26), rgba(0,0,0,.10)),
+             url("${SVG_LEAVES}")`
+  },
+  metal: {
+    app: `radial-gradient(1100px 700px at 20% -10%, rgba(255,255,255,.08), transparent 55%),
+          radial-gradient(900px 600px at 80% 10%, rgba(0,0,0,.55), transparent 55%),
+          url("${SVG_METAL}"),
+          #07080c`,
+    panel: `linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.20)),
+            url("${SVG_METAL}")`,
+    topbar: `linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.18)),
+             url("${SVG_METAL}")`
+  },
+  anime: {
+    app: `radial-gradient(1100px 700px at 20% -10%, rgba(255,80,160,.18), transparent 55%),
+          radial-gradient(900px 600px at 80% 10%, rgba(124,92,255,.18), transparent 55%),
+          url("${SVG_ANIME}"),
+          #0b0f18`,
+    panel: `linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.14)),
+            url("${SVG_ANIME}")`,
+    topbar: `linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.12)),
+             url("${SVG_ANIME}")`
+  }
+};
+
+function applyBackgroundPrefs(prefs) {
+  const root = document.documentElement;
+  const appKey = prefs?.app || "witch";
+  const panelKey = prefs?.panel || "witch";
+  const topbarKey = prefs?.topbar || "witch";
+
+  const app = BG_PRESETS[appKey]?.app || BG_PRESETS.witch.app;
+  const panel = BG_PRESETS[panelKey]?.panel || BG_PRESETS.witch.panel;
+  const topbar = BG_PRESETS[topbarKey]?.topbar || BG_PRESETS.witch.topbar;
+
+  root.style.setProperty("--app-bg", app);
+  root.style.setProperty("--panel-bg", panel);
+  root.style.setProperty("--topbar-bg", topbar);
+}
+
+function loadBackgroundPrefs() {
+  try {
+    const raw = localStorage.getItem(BG_PREF_KEY);
+    if (!raw) return { app: "witch", panel: "witch", topbar: "witch" };
+    const parsed = JSON.parse(raw);
+    return {
+      app: parsed.app || "witch",
+      panel: parsed.panel || "witch",
+      topbar: parsed.topbar || "witch"
+    };
+  } catch {
+    return { app: "witch", panel: "witch", topbar: "witch" };
+  }
+}
+
+function saveBackgroundPrefs(prefs) {
+  localStorage.setItem(BG_PREF_KEY, JSON.stringify(prefs));
+}
+
 /* ================= INIT (after DOM ready) ================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Apply background prefs immediately
+  const bgPrefs = loadBackgroundPrefs();
+  applyBackgroundPrefs(bgPrefs);
+
   // Elements
   const appRoot = document.getElementById("appRoot");
 
@@ -78,6 +252,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const countEl = document.getElementById("count");
   const searchInput = document.getElementById("searchInput");
   const sortSelect = document.getElementById("sortSelect");
+
+  /* NEW: Background UI elements */
+  const bgBtn = document.getElementById("bgBtn");
+  const bgOverlay = document.getElementById("bgOverlay");
+  const bgCloseBtn = document.getElementById("bgCloseBtn");
+  const bgResetBtn = document.getElementById("bgResetBtn");
+  const bgAppSelect = document.getElementById("bgAppSelect");
+  const bgPanelSelect = document.getElementById("bgPanelSelect");
+  const bgTopbarSelect = document.getElementById("bgTopbarSelect");
 
   /* ---------- UI helpers ---------- */
 
@@ -118,6 +301,57 @@ document.addEventListener("DOMContentLoaded", () => {
     const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     localStorage.setItem(THEME_KEY, next);
+  });
+
+  /* ---------- BACKGROUND SETTINGS ---------- */
+
+  function openBgSettings() {
+    const prefs = loadBackgroundPrefs();
+    bgAppSelect.value = prefs.app || "witch";
+    bgPanelSelect.value = prefs.panel || "witch";
+    bgTopbarSelect.value = prefs.topbar || "witch";
+
+    bgOverlay.classList.add("show");
+    bgOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeBgSettings() {
+    bgOverlay.classList.remove("show");
+    bgOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function commitBgPrefs() {
+    const prefs = {
+      app: bgAppSelect.value,
+      panel: bgPanelSelect.value,
+      topbar: bgTopbarSelect.value
+    };
+    saveBackgroundPrefs(prefs);
+    applyBackgroundPrefs(prefs);
+  }
+
+  bgBtn?.addEventListener("click", () => openBgSettings());
+  bgCloseBtn?.addEventListener("click", () => closeBgSettings());
+
+  bgOverlay?.addEventListener("click", (e) => {
+    if (e.target === bgOverlay) closeBgSettings();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeBgSettings();
+  });
+
+  bgAppSelect?.addEventListener("change", () => commitBgPrefs());
+  bgPanelSelect?.addEventListener("change", () => commitBgPrefs());
+  bgTopbarSelect?.addEventListener("change", () => commitBgPrefs());
+
+  bgResetBtn?.addEventListener("click", () => {
+    const prefs = { app: "witch", panel: "witch", topbar: "witch" };
+    saveBackgroundPrefs(prefs);
+    applyBackgroundPrefs(prefs);
+    bgAppSelect.value = "witch";
+    bgPanelSelect.value = "witch";
+    bgTopbarSelect.value = "witch";
+    setStatus("🖼️ Background zurückgesetzt.");
   });
 
   /* ---------- AUTH + LEGAL ---------- */
@@ -176,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("🔒 Abgemeldet.");
   });
 
-  // Legal accept logic (same as your working code)
+  // Legal accept logic
   if (legalAcceptBtn && legalAcceptCheck) {
     legalAcceptBtn.disabled = true;
 
@@ -305,7 +539,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const safeName = sanitizeFilename(file.name);
         const path = `${activeCategory}/${id}_${safeName}`;
 
-        // Upload file to storage
         const { error: upErr } = await sb.storage
           .from(BUCKET)
           .upload(path, file, {
@@ -320,7 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
           continue;
         }
 
-        // Insert DB row
         const { error: insErr } = await sb
           .from(TABLE)
           .insert([{
@@ -333,8 +565,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (insErr) {
           console.error(insErr);
           setStatus(`⚠️ Datei hochgeladen, aber DB-Eintrag fehlgeschlagen: "${file.name}"`);
-          // Optional rollback:
-          // await sb.storage.from(BUCKET).remove([path]);
           continue;
         }
 
@@ -394,7 +624,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function render() {
     if (!grid || !countEl) return;
 
-    // require category to show (so "Alle" means: nothing until category chosen)
     if (!CATEGORIES.includes(activeCategory)) {
       countEl.textContent = "0";
       grid.innerHTML = `
@@ -406,15 +635,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const s = (searchInput?.value || "").trim().toLowerCase();
-
       let view = await fetchCategoryItems(activeCategory);
 
-      // search filter
-      if (s) {
-        view = view.filter(it => String(it.filename || "").toLowerCase().includes(s));
-      }
+      if (s) view = view.filter(it => String(it.filename || "").toLowerCase().includes(s));
 
-      // sort (same options as before)
       const sortMode = sortSelect?.value || "newest";
       if (sortMode === "newest") view.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (sortMode === "oldest") view.sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
@@ -555,3 +779,4 @@ function getCookie(name) {
   }
   return "";
 }
+
