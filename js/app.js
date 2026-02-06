@@ -210,6 +210,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Elements
      const bgPrefs = loadBackgroundPrefs();
   applyBackgroundPrefs(bgPrefs);
+     const bgBtn = document.getElementById("bgBtn");
+  const bgOverlay = document.getElementById("bgOverlay");
+  const bgCloseBtn = document.getElementById("bgCloseBtn");
+  const bgResetBtn = document.getElementById("bgResetBtn");
+  const bgAppSelect = document.getElementById("bgAppSelect");
+  const bgPanelSelect = document.getElementById("bgPanelSelect");
+  const bgTopbarSelect = document.getElementById("bgTopbarSelect");
 
   const appRoot = document.getElementById("appRoot");
 
@@ -272,6 +279,51 @@ document.addEventListener("DOMContentLoaded", () => {
     if (uploadLockedHint) uploadLockedHint.hidden = ok;
     if (activeCategoryLabel) activeCategoryLabel.textContent = ok ? activeCategory : "—";
   }
+  function openBgSettings() {
+    const prefs = loadBackgroundPrefs();
+    bgAppSelect.value = prefs.app || "witch";
+    bgPanelSelect.value = prefs.panel || "witch";
+    bgTopbarSelect.value = prefs.topbar || "witch";
+
+    bgOverlay.classList.add("show");
+    bgOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeBgSettings() {
+    bgOverlay.classList.remove("show");
+    bgOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function commitBgPrefs() {
+    const prefs = {
+      app: bgAppSelect.value,
+      panel: bgPanelSelect.value,
+      topbar: bgTopbarSelect.value
+    };
+    saveBackgroundPrefs(prefs);
+    applyBackgroundPrefs(prefs);
+  }
+
+  bgBtn?.addEventListener("click", () => openBgSettings());
+  bgCloseBtn?.addEventListener("click", () => closeBgSettings());
+
+  bgOverlay?.addEventListener("click", (e) => {
+    if (e.target === bgOverlay) closeBgSettings();
+  });
+
+  bgAppSelect?.addEventListener("change", () => commitBgPrefs());
+  bgPanelSelect?.addEventListener("change", () => commitBgPrefs());
+  bgTopbarSelect?.addEventListener("change", () => commitBgPrefs());
+
+  bgResetBtn?.addEventListener("click", () => {
+    const prefs = { app: "witch", panel: "witch", topbar: "witch" };
+    saveBackgroundPrefs(prefs);
+    applyBackgroundPrefs(prefs);
+    bgAppSelect.value = "witch";
+    bgPanelSelect.value = "witch";
+    bgTopbarSelect.value = "witch";
+    setStatus("🖼️ Background zurückgesetzt.");
+  });
 
   /* ---------- THEME ---------- */
 
@@ -722,4 +774,5 @@ function getCookie(name) {
   }
   return "";
 }
+
 
