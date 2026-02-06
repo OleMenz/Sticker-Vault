@@ -1,1 +1,213 @@
-<!doctype html> <html lang="de"> <head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> <title>Sticker Vault</title> <link rel="stylesheet" href="css/styles.css" /> </head> <body> <!-- LOGIN OVERLAY --> <div id="authOverlay" class="authOverlay" aria-hidden="true"> <div class="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle"> <div class="authHead"> <div class="logo big">SV</div> <div> <h2 id="authTitle">Passwort erforderlich</h2> <p class="muted">Bitte Passwort eingeben, um die Website zu öffnen.</p> </div> </div> <form id="authForm" class="authForm"> <label class="authLabel" for="authPassword">Passwort</label> <input id="authPassword" class="input" type="password" autocomplete="current-password" required /> <div class="authRow"> <label class="remember"> <input id="authRemember" type="checkbox" /> <span>angemeldet bleiben</span> </label> <button class="btn" type="submit">Entsperren</button> </div> <div id="authMsg" class="authMsg" role="status" aria-live="polite"></div> </form> <p class="authFoot muted"> Hinweis: Client-Side Schutz (auf GitHub Pages nicht “wirklich sicher”). </p> </div> </div> <!-- LEGAL / DISCLAIMER COOKIE OVERLAY --> <div id="legalOverlay" class="legalOverlay" aria-hidden="true"> <div class="legalCard" role="dialog" aria-modal="true" aria-labelledby="legalTitle"> <div class="legalHead"> <div class="logo big">SV</div> <div> <h2 id="legalTitle">Hinweis & Zustimmung erforderlich</h2> <p class="muted">Bitte bestätige den Haftungsausschluss, um fortzufahren.</p> </div> </div> <div class="legalBody"> <div class="legalText"> <p><strong>Haftungsausschluss / Verantwortung:</strong></p> <ul> <li>Du bist selbst verantwortlich für die Inhalte, die du hochlädst oder herunterlädst.</li> <li>Lade nur Inhalte hoch, für die du die nötigen Rechte hast (z. B. Copyright/Lizenzen/Markenrechte).</li> <li>Diese Website stellt nur eine technische Oberfläche bereit und übernimmt <strong>keine Verantwortung</strong> für Rechtsverletzungen, Schäden oder Konsequenzen.</li> <li>Du handelst auf eigenes Risiko und übernimmst die volle Verantwortung.</li> </ul> <p class="muted"> Hinweis: Auf GitHub Pages (statische Seite) ist dies ein Consent-Hinweis per Cookie. </p> </div> <label class="legalCheck"> <input id="legalAcceptCheck" type="checkbox" /> <span>Ich habe den Hinweis gelesen und akzeptiere ihn.</span> </label> <div class="legalActions"> <button id="legalAcceptBtn" class="btn" type="button" disabled>Akzeptieren</button> <button id="legalDeclineBtn" class="btn secondary" type="button">Nicht akzeptieren</button> </div> <div id="legalMsg" class="authMsg" role="status" aria-live="polite"></div> </div> </div> </div> <div id="appRoot" class="app"> <header class="topbar"> <div class="leftGroup"> <!-- BURGER MENU BUTTON --> <button id="menuBtn" class="iconBtn" type="button" aria-label="Menü öffnen" aria-expanded="false" > <span class="burger" aria-hidden="true"></span> </button> <div class="brand"> <div class="logo">SV</div> <div> <h1>Sticker Vault</h1> <p class="sub">Upload & Download deiner Sticker (Supabase)</p> </div> </div> </div> <div class="actions"> <button id="themeToggle" class="btn secondary" type="button" aria-label="Theme umschalten"> <span class="icon">🌓</span> <span class="label">Theme</span> </button> <button id="logoutBtn" class="btn secondary" type="button" aria-label="Abmelden"> <span class="icon">🔒</span> <span class="label">Logout</span> </button> </div> </header> <!-- Sidebar Backdrop --> <div id="sidebarBackdrop" class="sidebarBackdrop" hidden></div> <!-- Sidebar --> <aside id="sidebar" class="sidebar" aria-label="Navigation" aria-hidden="true"> <div class="sidebarHead"> <div class="sidebarTitle"> <span class="logo mini">SV</span> <strong>Menü</strong> </div> <button id="closeSidebar" class="iconBtn" type="button" aria-label="Menü schließen">✕</button> </div> <div class="sidebarBody"> <label class="sidebarLabel" for="sidebarSearch">Suchen</label> <input id="sidebarSearch" class="input" type="search" placeholder="Sticker suchen…" /> <div class="sidebarSection"> <div class="sidebarLabel">Kategorien</div> <div class="catList"> <button class="catBtn" data-category="all" type="button">Alle</button> <button class="catBtn" data-category="Gina" type="button">Gina</button> <button class="catBtn" data-category="Conor" type="button">Conor</button> <button class="catBtn" data-category="Ole" type="button">Ole</button> <button class="catBtn" data-category="Leandra" type="button">Leandra</button> <button class="catBtn" data-category="Lu" type="button">Lu</button> <button class="catBtn" data-category="Lea" type="button">Lea</button> </div> </div> </div> </aside> <main class="content"> <section class="panel"> <h2>Sticker hochladen</h2> <!-- Hinweis, solange keine Kategorie ausgewählt ist --> <div id="uploadLockedHint" class="lockedHint"> Bitte wähle links im Menü eine Kategorie, um Sticker hochzuladen. </div> <!-- Upload Controls: werden erst sichtbar nach Kategorie-Auswahl --> <div id="uploadControls" class="uploadRow" hidden> <label class="fileBtn btn" for="fileInput"> <span class="icon">⬆️</span> <span>Dateien auswählen</span> </label> <input id="fileInput" type="file" multiple accept=".png,.tiff,.tif,.jpg,.jpeg,.webp,.heic,.svg,.gif" /> <button id="clearAll" class="btn danger" type="button"> <span class="icon">🗑️</span> <span>Kategorie leeren</span> </button> <div class="activeCatPill"> Kategorie: <strong id="activeCategoryLabel">—</strong> </div> </div> <div class="hint"> Erlaubte Formate: <code>.png</code>, <code>.tiff</code>, <code>.tif</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.webp</code>, <code>.heic</code>, <code>.svg</code>, <code>.gif</code> </div> <div class="searchRow"> <input id="searchInput" class="input" type="search" placeholder="Sticker suchen (Name)…" /> <select id="sortSelect" class="select" aria-label="Sortierung"> <option value="newest">Neueste zuerst</option> <option value="oldest">Älteste zuerst</option> <option value="az">A–Z</option> <option value="za">Z–A</option> </select> </div> <div id="status" class="status" role="status" aria-live="polite"></div> </section> <section class="panel"> <div class="panelHeader"> <h2>Galerie</h2> <div class="counter"><span id="count">0</span> Sticker</div> </div> <div id="grid" class="grid" aria-label="Sticker Galerie"></div> </section> </main> <footer class="footer"> <span>Made with HTML/CSS/JS • Supabase Storage + DB</span> </footer> </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <script src="js/app.js"></script> </body> </html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sticker Vault</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <!-- LOGIN OVERLAY -->
+  <div id="authOverlay" class="authOverlay" aria-hidden="true">
+    <div class="authCard" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="authHead">
+        <div class="logo big">SV</div>
+        <div>
+          <h2 id="authTitle">Passwort erforderlich</h2>
+          <p class="muted">Bitte Passwort eingeben, um die Website zu öffnen.</p>
+        </div>
+      </div>
+
+      <form id="authForm" class="authForm">
+        <label class="authLabel" for="authPassword">Passwort</label>
+        <input id="authPassword" class="input" type="password" autocomplete="current-password" required />
+        <div class="authRow">
+          <label class="remember">
+            <input id="authRemember" type="checkbox" />
+            <span>angemeldet bleiben</span>
+          </label>
+          <button class="btn" type="submit">Entsperren</button>
+        </div>
+        <div id="authMsg" class="authMsg" role="status" aria-live="polite"></div>
+      </form>
+
+      <p class="authFoot muted">
+        Hinweis: Client-Side Schutz (auf GitHub Pages nicht “wirklich sicher”).
+      </p>
+    </div>
+  </div>
+
+  <!-- LEGAL / DISCLAIMER COOKIE OVERLAY -->
+  <div id="legalOverlay" class="legalOverlay" aria-hidden="true">
+    <div class="legalCard" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+      <div class="legalHead">
+        <div class="logo big">SV</div>
+        <div>
+          <h2 id="legalTitle">Hinweis & Zustimmung erforderlich</h2>
+          <p class="muted">Bitte bestätige den Haftungsausschluss, um fortzufahren.</p>
+        </div>
+      </div>
+
+      <div class="legalBody">
+        <div class="legalText">
+          <p><strong>Haftungsausschluss / Verantwortung:</strong></p>
+          <ul>
+            <li>Du bist selbst verantwortlich für die Inhalte, die du hochlädst oder herunterlädst.</li>
+            <li>Lade nur Inhalte hoch, für die du die nötigen Rechte hast (z. B. Copyright/Lizenzen/Markenrechte).</li>
+            <li>Diese Website stellt nur eine technische Oberfläche bereit und übernimmt <strong>keine Verantwortung</strong> für Rechtsverletzungen, Schäden oder Konsequenzen.</li>
+            <li>Du handelst auf eigenes Risiko und übernimmst die volle Verantwortung.</li>
+          </ul>
+          <p class="muted">
+            Hinweis: Auf GitHub Pages (statische Seite) ist dies ein Consent-Hinweis per Cookie.
+          </p>
+        </div>
+
+        <label class="legalCheck">
+          <input id="legalAcceptCheck" type="checkbox" />
+          <span>Ich habe den Hinweis gelesen und akzeptiere ihn.</span>
+        </label>
+
+        <div class="legalActions">
+          <button id="legalAcceptBtn" class="btn" type="button" disabled>Akzeptieren</button>
+          <button id="legalDeclineBtn" class="btn secondary" type="button">Nicht akzeptieren</button>
+        </div>
+
+        <div id="legalMsg" class="authMsg" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appRoot" class="app">
+    <header class="topbar">
+      <div class="leftGroup">
+        <!-- BURGER MENU BUTTON -->
+        <button
+          id="menuBtn"
+          class="iconBtn"
+          type="button"
+          aria-label="Menü öffnen"
+          aria-expanded="false"
+        >
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+
+        <div class="brand">
+          <div class="logo">SV</div>
+          <div>
+            <h1>Sticker Vault</h1>
+            <p class="sub">Upload & Download deiner Sticker (Supabase)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="themeToggle" class="btn secondary" type="button" aria-label="Theme umschalten">
+          <span class="icon">🌓</span>
+          <span class="label">Theme</span>
+        </button>
+        <button id="logoutBtn" class="btn secondary" type="button" aria-label="Abmelden">
+          <span class="icon">🔒</span>
+          <span class="label">Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="sidebarBackdrop" hidden></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Navigation" aria-hidden="true">
+      <div class="sidebarHead">
+        <div class="sidebarTitle">
+          <span class="logo mini">SV</span>
+          <strong>Menü</strong>
+        </div>
+        <button id="closeSidebar" class="iconBtn" type="button" aria-label="Menü schließen">✕</button>
+      </div>
+
+      <div class="sidebarBody">
+        <label class="sidebarLabel" for="sidebarSearch">Suchen</label>
+        <input id="sidebarSearch" class="input" type="search" placeholder="Sticker suchen…" />
+
+        <div class="sidebarSection">
+          <div class="sidebarLabel">Kategorien</div>
+          <div class="catList">
+            <button class="catBtn" data-category="all" type="button">Alle</button>
+            <button class="catBtn" data-category="Gina" type="button">Gina</button>
+            <button class="catBtn" data-category="Conor" type="button">Conor</button>
+            <button class="catBtn" data-category="Ole" type="button">Ole</button>
+            <button class="catBtn" data-category="Leandra" type="button">Leandra</button>
+            <button class="catBtn" data-category="Lu" type="button">Lu</button>
+            <button class="catBtn" data-category="Lea" type="button">Lea</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="panel">
+        <h2>Sticker hochladen</h2>
+
+        <!-- Hinweis, solange keine Kategorie ausgewählt ist -->
+        <div id="uploadLockedHint" class="lockedHint">
+          Bitte wähle links im Menü eine Kategorie, um Sticker hochzuladen.
+        </div>
+
+        <!-- Upload Controls: werden erst sichtbar nach Kategorie-Auswahl -->
+        <div id="uploadControls" class="uploadRow" hidden>
+          <label class="fileBtn btn" for="fileInput">
+            <span class="icon">⬆️</span>
+            <span>Dateien auswählen</span>
+          </label>
+          <input id="fileInput" type="file" multiple
+                 accept=".png,.tiff,.tif,.jpg,.jpeg,.webp,.heic,.svg,.gif" />
+
+          <button id="clearAll" class="btn danger" type="button">
+            <span class="icon">🗑️</span>
+            <span>Kategorie leeren</span>
+          </button>
+
+          <div class="activeCatPill">
+            Kategorie: <strong id="activeCategoryLabel">—</strong>
+          </div>
+        </div>
+
+        <div class="hint">
+          Erlaubte Formate:
+          <code>.png</code>, <code>.tiff</code>, <code>.tif</code>, <code>.jpg</code>, <code>.jpeg</code>,
+          <code>.webp</code>, <code>.heic</code>, <code>.svg</code>, <code>.gif</code>
+        </div>
+
+        <div class="searchRow">
+          <input id="searchInput" class="input" type="search" placeholder="Sticker suchen (Name)…" />
+          <select id="sortSelect" class="select" aria-label="Sortierung">
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+            <option value="az">A–Z</option>
+            <option value="za">Z–A</option>
+          </select>
+        </div>
+
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panelHeader">
+          <h2>Galerie</h2>
+          <div class="counter"><span id="count">0</span> Sticker</div>
+        </div>
+
+        <div id="grid" class="grid" aria-label="Sticker Galerie"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Made with HTML/CSS/JS • Supabase Storage + DB</span>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
