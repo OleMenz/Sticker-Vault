@@ -78,6 +78,62 @@
     </div>
   </div>
 
+  <!-- BACKGROUND SETTINGS OVERLAY -->
+  <div id="bgOverlay" class="bgOverlay" aria-hidden="true">
+    <div class="bgCard" role="dialog" aria-modal="true" aria-labelledby="bgTitle">
+      <div class="bgHead">
+        <div class="logo big">SV</div>
+        <div>
+          <h2 id="bgTitle">Hintergrund einstellen</h2>
+          <p class="muted">Du kannst verschiedene Backgrounds für Seite, Panels und Titelbereich wählen.</p>
+        </div>
+      </div>
+
+      <div class="bgBody">
+        <div class="bgGrid">
+          <div class="bgField">
+            <label class="authLabel" for="bgAppSelect">Website Hintergrund</label>
+            <select id="bgAppSelect" class="select">
+              <option value="witch">Schwarz • Hexenartig • Spinnennetze • Katze</option>
+              <option value="cozy">Dunkelgrün • Pflanzen • Katze • Cozy</option>
+              <option value="metal">Schwarz • Metal Art</option>
+              <option value="anime">Anime • Collage/Compilation</option>
+            </select>
+          </div>
+
+          <div class="bgField">
+            <label class="authLabel" for="bgPanelSelect">Panels (Upload + Galerie)</label>
+            <select id="bgPanelSelect" class="select">
+              <option value="witch">Schwarz • Hexenartig • Spinnennetze • Katze</option>
+              <option value="cozy">Dunkelgrün • Pflanzen • Katze • Cozy</option>
+              <option value="metal">Schwarz • Metal Art</option>
+              <option value="anime">Anime • Collage/Compilation</option>
+            </select>
+          </div>
+
+          <div class="bgField">
+            <label class="authLabel" for="bgTopbarSelect">Titelbereich (Topbar)</label>
+            <select id="bgTopbarSelect" class="select">
+              <option value="witch">Schwarz • Hexenartig • Spinnennetze • Katze</option>
+              <option value="cozy">Dunkelgrün • Pflanzen • Katze • Cozy</option>
+              <option value="metal">Schwarz • Metal Art</option>
+              <option value="anime">Anime • Collage/Compilation</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bgActions">
+          <button id="bgResetBtn" class="btn secondary" type="button">Reset</button>
+          <button id="bgCloseBtn" class="btn" type="button">Fertig</button>
+        </div>
+
+        <div class="authMsg muted" style="margin-top:6px;">
+          Hinweis: Diese Einstellung wird lokal im Browser gespeichert (nur Design).
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="appRoot" class="app">
     <header class="topbar">
       <div class="leftGroup">
@@ -102,10 +158,16 @@
       </div>
 
       <div class="actions">
+        <button id="bgBtn" class="btn secondary" type="button" aria-label="Hintergrund einstellen">
+          <span class="icon">🖼️</span>
+          <span class="label">Background</span>
+        </button>
+
         <button id="themeToggle" class="btn secondary" type="button" aria-label="Theme umschalten">
           <span class="icon">🌓</span>
           <span class="label">Theme</span>
         </button>
+
         <button id="logoutBtn" class="btn secondary" type="button" aria-label="Abmelden">
           <span class="icon">🔒</span>
           <span class="label">Logout</span>
@@ -149,12 +211,10 @@
       <section class="panel">
         <h2>Sticker hochladen</h2>
 
-        <!-- Hinweis, solange keine Kategorie ausgewählt ist -->
         <div id="uploadLockedHint" class="lockedHint">
           Bitte wähle links im Menü eine Kategorie, um Sticker hochzuladen.
         </div>
 
-        <!-- Upload Controls: werden erst sichtbar nach Kategorie-Auswahl -->
         <div id="uploadControls" class="uploadRow" hidden>
           <label class="fileBtn btn" for="fileInput">
             <span class="icon">⬆️</span>
