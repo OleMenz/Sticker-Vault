@@ -32,7 +32,7 @@ html,body{ height:100%; }
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-  background:
+  background: var(--app-bg);
     radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.18), transparent 55%),
     radial-gradient(900px 600px at 90% 10%, rgba(55,210,177,.10), transparent 55%),
     var(--bg);
@@ -54,7 +54,8 @@ body{
   align-items:center;
   justify-content:space-between;
   padding: 18px 18px;
-  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  background: var(--topbar-bg);
+  linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
   border: 1px solid var(--border);
   border-radius: var(--radius2);
   box-shadow: var(--shadow);
@@ -111,7 +112,8 @@ h1{
 }
 
 .panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  background: var(--panel-bg);
+  linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
   border: 1px solid var(--border);
   border-radius: var(--radius2);
   box-shadow: var(--shadow);
@@ -619,4 +621,59 @@ input[type="file"]{ display:none; }
   gap: 10px;
   flex-wrap:wrap;
   justify-content:flex-end;
+}
+/* NEW: customizable backgrounds */
+--app-bg: radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.18), transparent 55%),
+          radial-gradient(900px 600px at 90% 10%, rgba(55,210,177,.10), transparent 55%),
+          #0f1218;
+
+--panel-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+--topbar-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+/* ---------- Background Settings Overlay ---------- */
+.bgOverlay{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(8px);
+  z-index: 9997;
+}
+.bgOverlay.show{ display: flex; }
+
+.bgCard{
+  width: min(760px, 100%);
+  border-radius: var(--radius2);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.bgHead{
+  display:flex;
+  gap: 14px;
+  align-items:center;
+  margin-bottom: 12px;
+}
+
+.bgBody{ display:grid; gap: 12px; }
+
+.bgGrid{
+  display:grid;
+  gap: 12px;
+}
+@media (min-width: 720px){
+  .bgGrid{ grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.bgField{ display:grid; gap: 6px; }
+
+.bgActions{
+  display:flex;
+  gap: 10px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
 }
