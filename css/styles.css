@@ -12,6 +12,17 @@
   --radius: 16px;
   --radius2: 22px;
 
+  /* NEW: customizable backgrounds */
+  --app-bg: radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.18), transparent 55%),
+            radial-gradient(900px 600px at 90% 10%, rgba(55,210,177,.10), transparent 55%),
+            #0f1218;
+  --panel-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  --topbar-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+
+  --app-bg-size: auto;
+  --panel-bg-size: auto;
+  --topbar-bg-size: auto;
+
   color-scheme: dark;
 }
 
@@ -33,9 +44,10 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
   background: var(--app-bg);
-    radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.18), transparent 55%),
-    radial-gradient(900px 600px at 90% 10%, rgba(55,210,177,.10), transparent 55%),
-    var(--bg);
+  background-size: var(--app-bg-size, auto);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
   color: var(--text);
 }
 
@@ -55,7 +67,9 @@ body{
   justify-content:space-between;
   padding: 18px 18px;
   background: var(--topbar-bg);
-  linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  background-size: var(--topbar-bg-size, auto);
+  background-repeat: no-repeat;
+  background-position: center;
   border: 1px solid var(--border);
   border-radius: var(--radius2);
   box-shadow: var(--shadow);
@@ -113,7 +127,9 @@ h1{
 
 .panel{
   background: var(--panel-bg);
-  linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  background-size: var(--panel-bg-size, auto);
+  background-repeat: no-repeat;
+  background-position: center;
   border: 1px solid var(--border);
   border-radius: var(--radius2);
   box-shadow: var(--shadow);
@@ -236,7 +252,6 @@ input[type="file"]{ display:none; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
-
 @media (min-width: 560px){ .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 920px){ .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
@@ -622,13 +637,7 @@ input[type="file"]{ display:none; }
   flex-wrap:wrap;
   justify-content:flex-end;
 }
-/* NEW: customizable backgrounds */
---app-bg: radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.18), transparent 55%),
-          radial-gradient(900px 600px at 90% 10%, rgba(55,210,177,.10), transparent 55%),
-          #0f1218;
 
---panel-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
---topbar-bg: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
 /* ---------- Background Settings Overlay ---------- */
 .bgOverlay{
   position: fixed;
@@ -644,7 +653,7 @@ input[type="file"]{ display:none; }
 .bgOverlay.show{ display: flex; }
 
 .bgCard{
-  width: min(760px, 100%);
+  width: min(860px, 100%);
   border-radius: var(--radius2);
   border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -665,11 +674,28 @@ input[type="file"]{ display:none; }
   display:grid;
   gap: 12px;
 }
-@media (min-width: 720px){
+@media (min-width: 820px){
   .bgGrid{ grid-template-columns: 1fr 1fr 1fr; }
 }
 
-.bgField{ display:grid; gap: 6px; }
+.bgField{
+  display:grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.14);
+}
+[data-theme="light"] .bgField{
+  background: rgba(255,255,255,.55);
+}
+
+.bgUploadRow{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+}
 
 .bgActions{
   display:flex;
@@ -677,4 +703,3 @@ input[type="file"]{ display:none; }
   justify-content:flex-end;
   flex-wrap:wrap;
 }
-
