@@ -1,9 +1,11 @@
 /* =========================================================
-   Sticker Vault – SUPABASE Version (based on your working code)
-   - Stickers NOT stored locally
-   - Files -> Supabase Storage (Bucket: "Sticker-Vault")
-   - Metadata -> Supabase Table   (Table:  "Sticker-Vault")
-   - localStorage ONLY for theme + remember login
+   Sticker Vault – SUPABASE Version + Background Customizer
+   - Files -> Supabase Storage (Bucket: "Sticker-Vault") [PUBLIC]
+   - Rows  -> Supabase Table   (Table:  "Sticker-Vault")
+   - localStorage ONLY for:
+       - theme
+       - remember login
+       - background presets + background images + random-on-start
    - Cookie used for legal disclaimer consent
 ========================================================= */
 
@@ -13,7 +15,6 @@ const SUPABASE_URL = "https://xmvmvzzthqhbvybugzib.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhtdm12enp0aHFoYnZ5YnVnemliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwMzU1NjksImV4cCI6MjA4NTYxMTU2OX0.pK5TT9uastEyMkRS4oWvpmj0iAFeKHod-98QeVVvZE0";
 
-// IMPORTANT: don't declare `supabase` again (it exists globally from the CDN script)
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // EXACT names as in Supabase
@@ -33,25 +34,29 @@ const AUTH_PERSIST_KEY = "stickerVault.auth.persist";
 
 const LEGAL_COOKIE_NAME = "sv_legal_accepted";
 const LEGAL_COOKIE_DAYS = 365;
-/* NEW: background preferences */
-const BG_PREF_KEY = "sv_bg_prefs.v1";
+
+/* ================= BACKGROUND PREFS (local) ================= */
+
+// bump version if you ever want to force-reset preset selections
+const BG_PREF_KEY = "sv_bg_prefs.v2";
+const BG_IMG_KEY = "sv_bg_images.v1";
+const BG_RANDOM_KEY = "sv_bg_random_on_start.v1";
 
 function svgDataUri(svg) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+/* ---- Preset SVGs: full webs, full cat faces, metal vibes, anime-collage vibe ---- */
+
 const SVG_WEB = svgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
   <rect width="520" height="520" fill="transparent"/>
   <g stroke="rgba(255,255,255,0.14)" stroke-width="1.4" fill="none">
-    <!-- Full web centered -->
     <circle cx="260" cy="260" r="220"/>
     <circle cx="260" cy="260" r="180"/>
     <circle cx="260" cy="260" r="140"/>
     <circle cx="260" cy="260" r="100"/>
     <circle cx="260" cy="260" r="60"/>
-
-    <!-- Radials -->
     <path d="M260 40 L260 480"/>
     <path d="M40 260 L480 260"/>
     <path d="M105 105 L415 415"/>
@@ -66,7 +71,6 @@ const SVG_WEB = svgDataUri(`
     <path d="M40 260 L105 105"/>
   </g>
 
-  <!-- Full cat face (center-bottom) -->
   <g transform="translate(0,8)">
     <path d="M170 360 L210 300 L250 340 Z" fill="rgba(255,255,255,0.10)"/>
     <path d="M350 360 L310 300 L270 340 Z" fill="rgba(255,255,255,0.10)"/>
@@ -90,7 +94,6 @@ const SVG_WEB = svgDataUri(`
 const SVG_LEAVES = svgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
   <rect width="520" height="520" fill="transparent"/>
-  <!-- Leaves / plants -->
   <g fill="rgba(120,255,160,0.12)">
     <path d="M85 370c70-150 190-230 350-260-35 135-150 260-350 260z"/>
     <path d="M110 410c120-90 250-120 390-105-70 110-210 180-390 105z"/>
@@ -103,7 +106,6 @@ const SVG_LEAVES = svgDataUri(`
     <path d="M320 120c12 72-6 128-55 185"/>
   </g>
 
-  <!-- Full cat face (right-bottom) -->
   <g transform="translate(0,0)">
     <path d="M300 395 L330 335 L360 385 Z" fill="rgba(255,255,255,0.12)"/>
     <path d="M440 395 L410 335 L380 385 Z" fill="rgba(255,255,255,0.12)"/>
@@ -127,8 +129,6 @@ const SVG_LEAVES = svgDataUri(`
 const SVG_METAL = svgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
   <rect width="520" height="520" fill="transparent"/>
-
-  <!-- gritty scratches -->
   <g stroke="rgba(255,255,255,0.10)" stroke-width="2" stroke-linecap="round">
     <path d="M30 110 L250 40"/>
     <path d="M90 180 L420 80"/>
@@ -137,13 +137,9 @@ const SVG_METAL = svgDataUri(`
     <path d="M10 480 L260 420"/>
     <path d="M260 120 L500 60"/>
   </g>
-
-  <!-- sharp metal symbol -->
   <g fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.14)" stroke-width="2">
     <path d="M260 85 L320 210 L470 235 L350 325 L380 470 L260 390 L140 470 L170 325 L50 235 L200 210 Z"/>
   </g>
-
-  <!-- subtle grid / steel plate -->
   <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
     <path d="M0 52 L520 52"/><path d="M0 104 L520 104"/><path d="M0 156 L520 156"/>
     <path d="M0 208 L520 208"/><path d="M0 260 L520 260"/><path d="M0 312 L520 312"/>
@@ -158,8 +154,6 @@ const SVG_METAL = svgDataUri(`
 const SVG_ANIME = svgDataUri(`
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
   <rect width="520" height="520" fill="rgba(255,255,255,0.02)"/>
-
-  <!-- "Anime collage" vibe: big bold panels + stylized faces (NOT official art, just a homage vibe) -->
   <g opacity="0.95">
     <rect x="20" y="20" width="230" height="150" rx="18" fill="rgba(255,120,80,0.18)"/>
     <rect x="270" y="20" width="230" height="150" rx="18" fill="rgba(124,92,255,0.18)"/>
@@ -167,32 +161,24 @@ const SVG_ANIME = svgDataUri(`
     <rect x="190" y="190" width="310" height="120" rx="18" fill="rgba(255,80,160,0.16)"/>
     <rect x="190" y="330" width="310" height="170" rx="18" fill="rgba(255,255,255,0.08)"/>
   </g>
-
-  <!-- stylized "shonen" icons -->
   <g fill="rgba(0,0,0,0.18)">
-    <!-- spiky hair face (Naruto-ish vibe) -->
     <path d="M95 55 L110 75 L130 55 L145 75 L165 55 L160 92 Q130 125 100 92 Z"/>
     <circle cx="130" cy="112" r="34" fill="rgba(255,255,255,0.12)"/>
     <circle cx="120" cy="112" r="6"/><circle cx="140" cy="112" r="6"/>
     <path d="M120 128 Q130 136 140 128" stroke="rgba(0,0,0,0.22)" stroke-width="3" fill="none" stroke-linecap="round"/>
 
-    <!-- sharp eyes face (JJK-ish vibe) -->
     <path d="M330 70 Q360 45 390 70 Q370 95 360 90 Q350 95 330 70 Z" fill="rgba(255,255,255,0.12)"/>
     <circle cx="360" cy="118" r="32" fill="rgba(255,255,255,0.12)"/>
     <path d="M345 112 Q360 102 375 112" stroke="rgba(0,0,0,0.22)" stroke-width="4" fill="none" stroke-linecap="round"/>
     <path d="M345 126 Q360 136 375 126" stroke="rgba(0,0,0,0.18)" stroke-width="3" fill="none" stroke-linecap="round"/>
 
-    <!-- hero mask (MHA-ish vibe) -->
     <path d="M70 245 Q95 220 120 245 Q110 310 95 325 Q80 310 70 245 Z" fill="rgba(255,255,255,0.12)"/>
     <circle cx="95" cy="280" r="5"/><circle cx="112" cy="280" r="5"/>
 
-    <!-- hunter vibe (HxH-ish) -->
     <path d="M265 215 L315 215 L300 240 L280 240 Z" fill="rgba(255,255,255,0.12)"/>
     <circle cx="290" cy="270" r="26" fill="rgba(255,255,255,0.12)"/>
     <circle cx="282" cy="268" r="5"/><circle cx="298" cy="268" r="5"/>
   </g>
-
-  <!-- manga speed lines -->
   <g stroke="rgba(255,255,255,0.10)" stroke-width="2" stroke-linecap="round">
     <path d="M30 500 L130 420"/>
     <path d="M70 500 L190 410"/>
@@ -202,6 +188,7 @@ const SVG_ANIME = svgDataUri(`
   </g>
 </svg>
 `);
+
 const BG_PRESETS = {
   witch: {
     app: `radial-gradient(1200px 800px at 25% -10%, rgba(124,92,255,.22), transparent 55%),
@@ -213,7 +200,6 @@ const BG_PRESETS = {
     topbar: `linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.16)),
              url("${SVG_WEB}")`
   },
-
   cozy: {
     app: `radial-gradient(1100px 750px at 25% -10%, rgba(30,140,95,.22), transparent 55%),
           radial-gradient(900px 600px at 85% 10%, rgba(0,0,0,.44), transparent 55%),
@@ -224,7 +210,6 @@ const BG_PRESETS = {
     topbar: `linear-gradient(180deg, rgba(10,30,20,.32), rgba(0,0,0,.10)),
              url("${SVG_LEAVES}")`
   },
-
   metal: {
     app: `radial-gradient(1100px 700px at 20% -10%, rgba(255,255,255,.10), transparent 55%),
           radial-gradient(900px 600px at 80% 10%, rgba(0,0,0,.62), transparent 55%),
@@ -235,7 +220,6 @@ const BG_PRESETS = {
     topbar: `linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.22)),
              url("${SVG_METAL}")`
   },
-
   anime: {
     app: `radial-gradient(1100px 700px at 20% -10%, rgba(255,80,160,.18), transparent 55%),
           radial-gradient(900px 600px at 80% 10%, rgba(124,92,255,.18), transparent 55%),
@@ -247,21 +231,6 @@ const BG_PRESETS = {
              url("${SVG_ANIME}")`
   }
 };
-
-function applyBackgroundPrefs(prefs) {
-  const root = document.documentElement;
-  const appKey = prefs?.app || "witch";
-  const panelKey = prefs?.panel || "witch";
-  const topbarKey = prefs?.topbar || "witch";
-
-  const app = BG_PRESETS[appKey]?.app || BG_PRESETS.witch.app;
-  const panel = BG_PRESETS[panelKey]?.panel || BG_PRESETS.witch.panel;
-  const topbar = BG_PRESETS[topbarKey]?.topbar || BG_PRESETS.witch.topbar;
-
-  root.style.setProperty("--app-bg", app);
-  root.style.setProperty("--panel-bg", panel);
-  root.style.setProperty("--topbar-bg", topbar);
-}
 
 function loadBackgroundPrefs() {
   try {
@@ -282,6 +251,69 @@ function saveBackgroundPrefs(prefs) {
   localStorage.setItem(BG_PREF_KEY, JSON.stringify(prefs));
 }
 
+function loadBgImages() {
+  try { return JSON.parse(localStorage.getItem(BG_IMG_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveBgImages(obj) {
+  localStorage.setItem(BG_IMG_KEY, JSON.stringify(obj));
+}
+
+function loadRandomOnStart() {
+  return localStorage.getItem(BG_RANDOM_KEY) === "1";
+}
+
+function saveRandomOnStart(v) {
+  localStorage.setItem(BG_RANDOM_KEY, v ? "1" : "0");
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function applyBackgroundPrefs(prefs) {
+  const root = document.documentElement;
+  const imgs = loadBgImages(); // { appDataUrl, panelDataUrl, topbarDataUrl }
+
+  const appKey = prefs?.app || "witch";
+  const panelKey = prefs?.panel || "witch";
+  const topbarKey = prefs?.topbar || "witch";
+
+  const presetApp = BG_PRESETS[appKey]?.app || BG_PRESETS.witch.app;
+  const presetPanel = BG_PRESETS[panelKey]?.panel || BG_PRESETS.witch.panel;
+  const presetTopbar = BG_PRESETS[topbarKey]?.topbar || BG_PRESETS.witch.topbar;
+
+  const appBg = imgs.appDataUrl
+    ? `radial-gradient(1200px 800px at 30% -10%, rgba(124,92,255,.12), transparent 55%),
+       url("${imgs.appDataUrl}"),
+       #0f1218`
+    : presetApp;
+
+  const panelBg = imgs.panelDataUrl
+    ? `linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10)),
+       url("${imgs.panelDataUrl}")`
+    : presetPanel;
+
+  const topbarBg = imgs.topbarDataUrl
+    ? `linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10)),
+       url("${imgs.topbarDataUrl}")`
+    : presetTopbar;
+
+  root.style.setProperty("--app-bg", appBg);
+  root.style.setProperty("--panel-bg", panelBg);
+  root.style.setProperty("--topbar-bg", topbarBg);
+
+  root.style.setProperty("--app-bg-size", imgs.appDataUrl ? "cover" : "auto");
+  root.style.setProperty("--panel-bg-size", imgs.panelDataUrl ? "cover" : "auto");
+  root.style.setProperty("--topbar-bg-size", imgs.topbarDataUrl ? "cover" : "auto");
+}
+
 /* ================= STATE ================= */
 
 let activeCategory = "none";  // must pick category for upload
@@ -292,16 +324,6 @@ let isLegalAccepted = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
-     const bgPrefs = loadBackgroundPrefs();
-  applyBackgroundPrefs(bgPrefs);
-     const bgBtn = document.getElementById("bgBtn");
-  const bgOverlay = document.getElementById("bgOverlay");
-  const bgCloseBtn = document.getElementById("bgCloseBtn");
-  const bgResetBtn = document.getElementById("bgResetBtn");
-  const bgAppSelect = document.getElementById("bgAppSelect");
-  const bgPanelSelect = document.getElementById("bgPanelSelect");
-  const bgTopbarSelect = document.getElementById("bgTopbarSelect");
-
   const appRoot = document.getElementById("appRoot");
 
   const authOverlay = document.getElementById("authOverlay");
@@ -337,6 +359,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const sortSelect = document.getElementById("sortSelect");
 
+  // Background UI
+  const bgBtn = document.getElementById("bgBtn");
+  const bgOverlay = document.getElementById("bgOverlay");
+  const bgCloseBtn = document.getElementById("bgCloseBtn");
+  const bgResetBtn = document.getElementById("bgResetBtn");
+  const bgAppSelect = document.getElementById("bgAppSelect");
+  const bgPanelSelect = document.getElementById("bgPanelSelect");
+  const bgTopbarSelect = document.getElementById("bgTopbarSelect");
+
+  const bgAppFile = document.getElementById("bgAppFile");
+  const bgPanelFile = document.getElementById("bgPanelFile");
+  const bgTopbarFile = document.getElementById("bgTopbarFile");
+
+  const bgAppClear = document.getElementById("bgAppClear");
+  const bgPanelClear = document.getElementById("bgPanelClear");
+  const bgTopbarClear = document.getElementById("bgTopbarClear");
+
+  const bgRandomOnStart = document.getElementById("bgRandomOnStart");
+
   /* ---------- UI helpers ---------- */
 
   function setStatus(msg) {
@@ -363,51 +404,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (uploadLockedHint) uploadLockedHint.hidden = ok;
     if (activeCategoryLabel) activeCategoryLabel.textContent = ok ? activeCategory : "—";
   }
-  function openBgSettings() {
-    const prefs = loadBackgroundPrefs();
-    bgAppSelect.value = prefs.app || "witch";
-    bgPanelSelect.value = prefs.panel || "witch";
-    bgTopbarSelect.value = prefs.topbar || "witch";
 
-    bgOverlay.classList.add("show");
-    bgOverlay.setAttribute("aria-hidden", "false");
+  /* ---------- APPLY BACKGROUND EARLY ---------- */
+
+  let bgPrefs = loadBackgroundPrefs();
+  if (loadRandomOnStart()) {
+    const keys = Object.keys(BG_PRESETS);
+    const pick = () => keys[Math.floor(Math.random() * keys.length)];
+    bgPrefs = { app: pick(), panel: pick(), topbar: pick() };
+    saveBackgroundPrefs(bgPrefs);
   }
-
-  function closeBgSettings() {
-    bgOverlay.classList.remove("show");
-    bgOverlay.setAttribute("aria-hidden", "true");
-  }
-
-  function commitBgPrefs() {
-    const prefs = {
-      app: bgAppSelect.value,
-      panel: bgPanelSelect.value,
-      topbar: bgTopbarSelect.value
-    };
-    saveBackgroundPrefs(prefs);
-    applyBackgroundPrefs(prefs);
-  }
-
-  bgBtn?.addEventListener("click", () => openBgSettings());
-  bgCloseBtn?.addEventListener("click", () => closeBgSettings());
-
-  bgOverlay?.addEventListener("click", (e) => {
-    if (e.target === bgOverlay) closeBgSettings();
-  });
-
-  bgAppSelect?.addEventListener("change", () => commitBgPrefs());
-  bgPanelSelect?.addEventListener("change", () => commitBgPrefs());
-  bgTopbarSelect?.addEventListener("change", () => commitBgPrefs());
-
-  bgResetBtn?.addEventListener("click", () => {
-    const prefs = { app: "witch", panel: "witch", topbar: "witch" };
-    saveBackgroundPrefs(prefs);
-    applyBackgroundPrefs(prefs);
-    bgAppSelect.value = "witch";
-    bgPanelSelect.value = "witch";
-    bgTopbarSelect.value = "witch";
-    setStatus("🖼️ Background zurückgesetzt.");
-  });
+  applyBackgroundPrefs(bgPrefs);
 
   /* ---------- THEME ---------- */
 
@@ -426,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- AUTH + LEGAL ---------- */
 
   function refreshAccess() {
-    // reset
     authOverlay?.classList.remove("show");
     legalOverlay?.classList.remove("show");
     unlockUI();
@@ -479,7 +485,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("🔒 Abgemeldet.");
   });
 
-  // Legal accept logic (same as your working code)
   if (legalAcceptBtn && legalAcceptCheck) {
     legalAcceptBtn.disabled = true;
 
@@ -539,7 +544,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape") closeSidebarFn();
   });
 
-  // Search sync
   sidebarSearch?.addEventListener("input", () => {
     if (searchInput) searchInput.value = sidebarSearch.value;
     render();
@@ -552,7 +556,6 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   });
 
-  // Category buttons
   document.querySelectorAll(".catBtn").forEach(btn => {
     btn.addEventListener("click", () => {
       const chosen = btn.dataset.category || "all";
@@ -566,6 +569,118 @@ document.addEventListener("DOMContentLoaded", () => {
       render();
       closeSidebarFn();
     });
+  });
+
+  /* ---------- BACKGROUND OVERLAY ---------- */
+
+  function openBgSettings() {
+    const prefs = loadBackgroundPrefs();
+    bgAppSelect.value = prefs.app || "witch";
+    bgPanelSelect.value = prefs.panel || "witch";
+    bgTopbarSelect.value = prefs.topbar || "witch";
+
+    if (bgRandomOnStart) bgRandomOnStart.checked = loadRandomOnStart();
+
+    bgOverlay.classList.add("show");
+    bgOverlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeBgSettings() {
+    bgOverlay.classList.remove("show");
+    bgOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  function commitBgPrefs() {
+    const prefs = {
+      app: bgAppSelect.value,
+      panel: bgPanelSelect.value,
+      topbar: bgTopbarSelect.value
+    };
+    saveBackgroundPrefs(prefs);
+    applyBackgroundPrefs(prefs);
+  }
+
+  bgBtn?.addEventListener("click", () => openBgSettings());
+  bgCloseBtn?.addEventListener("click", () => closeBgSettings());
+
+  bgOverlay?.addEventListener("click", (e) => {
+    if (e.target === bgOverlay) closeBgSettings();
+  });
+
+  bgAppSelect?.addEventListener("change", () => commitBgPrefs());
+  bgPanelSelect?.addEventListener("change", () => commitBgPrefs());
+  bgTopbarSelect?.addEventListener("change", () => commitBgPrefs());
+
+  bgRandomOnStart?.addEventListener("change", () => {
+    saveRandomOnStart(bgRandomOnStart.checked);
+    setStatus(bgRandomOnStart.checked ? "🎲 Zufalls-Background aktiv." : "🎲 Zufalls-Background aus.");
+  });
+
+  async function handleBgUpload(kind, file) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setStatus("❌ Bitte nur Bilder auswählen.");
+      return;
+    }
+    // keep local size reasonable (design only)
+    if (file.size > 5 * 1024 * 1024) {
+      setStatus("❌ Bild ist zu groß (max 5 MB für Background).");
+      return;
+    }
+
+    const dataUrl = await readFileAsDataURL(file);
+    const imgs = loadBgImages();
+
+    if (kind === "app") imgs.appDataUrl = dataUrl;
+    if (kind === "panel") imgs.panelDataUrl = dataUrl;
+    if (kind === "topbar") imgs.topbarDataUrl = dataUrl;
+
+    saveBgImages(imgs);
+    applyBackgroundPrefs(loadBackgroundPrefs());
+    setStatus("🖼️ Background gespeichert.");
+  }
+
+  bgAppFile?.addEventListener("change", async (e) => {
+    await handleBgUpload("app", e.target.files?.[0]);
+    bgAppFile.value = "";
+  });
+
+  bgPanelFile?.addEventListener("change", async (e) => {
+    await handleBgUpload("panel", e.target.files?.[0]);
+    bgPanelFile.value = "";
+  });
+
+  bgTopbarFile?.addEventListener("change", async (e) => {
+    await handleBgUpload("topbar", e.target.files?.[0]);
+    bgTopbarFile.value = "";
+  });
+
+  function clearBg(kind) {
+    const imgs = loadBgImages();
+    if (kind === "app") delete imgs.appDataUrl;
+    if (kind === "panel") delete imgs.panelDataUrl;
+    if (kind === "topbar") delete imgs.topbarDataUrl;
+    saveBgImages(imgs);
+    applyBackgroundPrefs(loadBackgroundPrefs());
+    setStatus("🧹 Background entfernt (Preset aktiv).");
+  }
+
+  bgAppClear?.addEventListener("click", () => clearBg("app"));
+  bgPanelClear?.addEventListener("click", () => clearBg("panel"));
+  bgTopbarClear?.addEventListener("click", () => clearBg("topbar"));
+
+  bgResetBtn?.addEventListener("click", () => {
+    saveBackgroundPrefs({ app: "witch", panel: "witch", topbar: "witch" });
+    saveBgImages({});
+    saveRandomOnStart(false);
+
+    bgAppSelect.value = "witch";
+    bgPanelSelect.value = "witch";
+    bgTopbarSelect.value = "witch";
+    bgRandomOnStart.checked = false;
+
+    applyBackgroundPrefs(loadBackgroundPrefs());
+    setStatus("🖼️ Background zurückgesetzt.");
   });
 
   /* ---------- SUPABASE HELPERS ---------- */
@@ -608,7 +723,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const safeName = sanitizeFilename(file.name);
         const path = `${activeCategory}/${id}_${safeName}`;
 
-        // Upload file to storage
         const { error: upErr } = await sb.storage
           .from(BUCKET)
           .upload(path, file, {
@@ -623,7 +737,6 @@ document.addEventListener("DOMContentLoaded", () => {
           continue;
         }
 
-        // Insert DB row
         const { error: insErr } = await sb
           .from(TABLE)
           .insert([{
@@ -636,7 +749,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (insErr) {
           console.error(insErr);
           setStatus(`⚠️ Datei hochgeladen, aber DB-Eintrag fehlgeschlagen: "${file.name}"`);
-          // Optional rollback:
+          // optional rollback:
           // await sb.storage.from(BUCKET).remove([path]);
           continue;
         }
@@ -697,7 +810,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function render() {
     if (!grid || !countEl) return;
 
-    // require category to show (so "Alle" means: nothing until category chosen)
     if (!CATEGORIES.includes(activeCategory)) {
       countEl.textContent = "0";
       grid.innerHTML = `
@@ -712,12 +824,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let view = await fetchCategoryItems(activeCategory);
 
-      // search filter
-      if (s) {
-        view = view.filter(it => String(it.filename || "").toLowerCase().includes(s));
-      }
+      if (s) view = view.filter(it => String(it.filename || "").toLowerCase().includes(s));
 
-      // sort (same options as before)
       const sortMode = sortSelect?.value || "newest";
       if (sortMode === "newest") view.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (sortMode === "oldest") view.sort((a,b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
